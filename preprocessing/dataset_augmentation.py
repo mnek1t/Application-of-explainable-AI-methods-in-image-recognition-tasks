@@ -4,9 +4,9 @@ import os
 import uuid
 
 # Initialize the paths and parameters
-input_dataset_path = 'D:\\University\\Bachelor Thesis\\garbadge_dataset\\TrashType_Image_Dataset'
-output_dataset_path = 'D:\\University\\Bachelor Thesis\\garbadge_dataset\\Augmented_Image_Dataset'
-target_image_amount = 700
+INPUT_DATASET_PATH = 'D:\\University\\Bachelor Thesis\\garbadge_dataset\\TrashType_Image_Dataset'
+OUTPUT_DATASET_PATH = 'D:\\University\\Bachelor Thesis\\garbadge_dataset\\Augmented_Image_Dataset'
+TARGET_IMAGE_AMOUNT = 700
 
 # Chain of augmentations
 transform = A.Compose([
@@ -49,9 +49,9 @@ def appy_augmentation(image_file_names, images_to_augment, class_input_path, cla
             cv2.imwrite(dst_path, cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR))
             augmented += 1
 
-for class_name in os.listdir(input_dataset_path):
-    class_input_path = os.path.join(input_dataset_path, class_name)
-    class_output_path = os.path.join(output_dataset_path, class_name)
+for class_name in os.listdir(INPUT_DATASET_PATH):
+    class_input_path = os.path.join(INPUT_DATASET_PATH, class_name)
+    class_output_path = os.path.join(OUTPUT_DATASET_PATH, class_name)
     os.makedirs(class_output_path, exist_ok=True)
 
     image_file_names = [f for f in os.listdir(class_input_path) if f.endswith(('.jpg'))] # dataset contains only .jpg files
@@ -59,8 +59,8 @@ for class_name in os.listdir(input_dataset_path):
 
     copy_files(image_file_names, class_input_path, class_output_path)
 
-    if original_count < target_image_amount:
-        images_to_augment = target_image_amount - original_count
+    if original_count < TARGET_IMAGE_AMOUNT:
+        images_to_augment = TARGET_IMAGE_AMOUNT - original_count
         appy_augmentation(image_file_names, images_to_augment, class_input_path, class_output_path)
     else:
         print(f"Class '{class_name}' already has {original_count} images, no augmentation needed.")
