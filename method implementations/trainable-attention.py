@@ -6,16 +6,14 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D, Layer
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.saving import register_keras_serializable
-import matplotlib.pyplot as plt
 import json
 from tensorflow.keras.applications.inception_v3 import InceptionV3
-import quantus
 import time
+from utils.xai_constants import IMAGE_PATH, CLASS_NAMES, TARGET_SIZE, METRICS, SPLIT_DATASET_PATH, TEST_DATASET_PATH, IMAGE_PATH
+from utils.xai_methods import load_and_preprocess_image, preprocess_localisation_from_contours, plot_results, plot_training_history
 
 start_execution_time = time.perf_counter()
 
-INCEPTION_V3_IMAGE_SIZE = (224, 224)
-SPLIT_DATASET_PATH = "D:\\University\\Bachelor Thesis\\garbadge_dataset\\splitted_augmented_dataset"
 TRAIN_DATASET_PATH = os.path.join(SPLIT_DATASET_PATH, "train")
 TEST_DATASET_PATH = os.path.join(SPLIT_DATASET_PATH, "test")
 VAL_DATASET_PATH = os.path.join(SPLIT_DATASET_PATH, "val")
@@ -46,7 +44,7 @@ x = GlobalAveragePooling2D()(x)
 x = Dropout(0.5)(x)
 x = Dense(128, activation='relu')(x)
 x = Dropout(0.3)(x)
-predictions = Dense(6, activation='softmax')(x)  # 6 classes - as in the dataset
+predictions = Dense(len(CLASS_NAMES), activation='softmax')(x) 
 
 model = Model(inputs=base_model.input, outputs=predictions)
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -54,13 +52,13 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 datagen = image.ImageDataGenerator(rescale=1./255)
 
 train_generator = datagen.flow_from_directory(
-    TRAIN_DATASET_PATH, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical')
+    TRAIN_DATASET_PATH, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical')
 
 val_generator = datagen.flow_from_directory(
-    VAL_DATASET_PATH, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical')
+    VAL_DATASET_PATH, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical')
 
 test_generator = datagen.flow_from_directory(
-    TEST_DATASET_PATH, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical', shuffle=False)
+    TEST_DATASET_PATH, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical', shuffle=False)
 
 # set best model checkpoints and early stopping to prevent overtraining
 checkpoint_path = "best_trainable_attention_spatial.keras"
@@ -93,26 +91,7 @@ with open("trainable_attention_spatial_inception_history_trimmed.json", "w") as 
     json.dump(trimmed_history, f)
 
 # plot model training analysis
-plt.figure(figsize=(14, 5))
-
-plt.subplot(1, 2, 1)
-plt.plot(trimmed_history['accuracy'], label='Train Accuracy')
-plt.plot(trimmed_history['val_accuracy'], label='Val Accuracy')
-plt.legend()
-plt.title("Accuracy")
-
-plt.subplot(1, 2, 2)
-plt.plot(trimmed_history['loss'], label='Train Loss')
-plt.plot(trimmed_history['val_loss'], label='Val Loss')
-plt.legend()
-plt.title("Loss")
-
-plt.tight_layout()
-plt.show()
-
-CLASS_NAMES = ['glass', 'cardboard', 'metal', 'paper', 'plastic', 'trash']
-MODEL_PATH = "D:\\University\\Bachelor Thesis\\xai methods\\best_trainable_attention_spatial.keras"
-IMAGE_PATH = "D:\\University\\Bachelor Thesis\\xai methods\\bcaa-trash.jpg"
+plot_training_history(trimmed_history)
 
 def get_attention_weights(model, img):
     img = img[None, ...]  
@@ -127,36 +106,8 @@ def get_attention_weights(model, img):
     attention_maps = attention_layer(features, training=False)
     return attention_maps
 
-def plot_results(title, input, img):
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-    attention_plot = ax[0].imshow(input, cmap='viridis') 
-    ax[0].axis("off")
-    ax[0].set_title(title)
-
-    cbar = fig.colorbar(attention_plot, ax=ax[0], fraction=0.046, pad=0.04)
-    cbar.set_label('Attention Intensity', rotation=270, labelpad=15)
-
-    ax[1].imshow(img)
-    ax[1].axis("off")
-    ax[1].set_title("Original Image")
-
-    plt.tight_layout()
-    plt.show()
-
-img = image.load_img(IMAGE_PATH, target_size=(224, 224))
-loaded_img = img
-
-pixels = np.asarray(img).astype('float32')
-
-x_batch = np.expand_dims(pixels, axis=0) 
-img = image.img_to_array(img)
-
-s_batch = np.zeros((1, 224, 224, 3), dtype=np.float32)
-s_batch[:, 56:168, 56:168, :] = 1
-
-x_batch_localisation = np.transpose(x_batch, (0, 3, 1, 2)) 
-single_channel_mask = s_batch[..., 0]
-s_batch_localisation = np.expand_dims(single_channel_mask, axis=1)
+x_batch, img = load_and_preprocess_image(IMAGE_PATH, TARGET_SIZE)
+x_batch_localisation, s_batch_localisation = preprocess_localisation_from_contours(IMAGE_PATH, TARGET_SIZE)
 
 preds = best_model.predict(x_batch)
 pred_class = np.argmax(preds[0])
@@ -167,60 +118,16 @@ attention_weights = get_attention_weights(best_model, img)
 attention_map = tf.reduce_mean(attention_weights, axis=-1)
 attention_map = tf.squeeze(attention_map) 
 
-attention_map_resized = tf.image.resize(attention_map[..., tf.newaxis], (224, 224))
+attention_map_resized = tf.image.resize(attention_map[..., tf.newaxis], TARGET_SIZE)
 attention_map_resized = tf.squeeze(attention_map_resized)
 a_batch = attention_map_resized.numpy()
 
-plot_results('Trainable attention map', a_batch, loaded_img)
+plot_results('Trainable attention map', a_batch, img)
 
 a_batch = np.expand_dims(a_batch, axis=0)
 
-metrics = {
-    "Faithfulness": quantus.FaithfulnessCorrelation(
-        nr_runs=15,
-        subset_size=20,
-        perturb_baseline="black",
-        perturb_func= quantus.baseline_replacement_by_indices,
-        similarity_func= quantus.similarity_func.correlation_pearson,
-        return_aggregate=True,
-    ),
-    "Complexity":  quantus.Sparseness(
-        normalise=True,
-        aggregate_func=np.mean,
-        return_aggregate=True
-    ),
-    "Effective Complexity":  quantus.EffectiveComplexity(
-        normalise=True,
-        aggregate_func=np.mean,
-        return_aggregate=True,
-    ),
-    "Localisation": quantus.RelevanceRankAccuracy(
-        abs=True,
-        normalise=True,
-        aggregate_func=np.mean,
-        return_aggregate=True,
-    ),
-    "Selectivity": quantus.Selectivity(
-        perturb_baseline="black",
-        patch_size=16,
-        perturb_func=quantus.baseline_replacement_by_indices,
-        abs=True,
-        normalise=True,
-        return_aggregate=True,
-        display_progressbar=True
-    ),
-    "SensitivityN": quantus.SensitivityN(
-        features_in_step=256, 
-        n_max_percentage=0.3, 
-        similarity_func=lambda a, b, **kwargs: quantus.similarity_func.abs_difference(np.array(a), np.array(b)),
-        perturb_baseline="black",
-        perturb_func=quantus.baseline_replacement_by_indices,
-        return_aggregate=True,
-        display_progressbar=True
-    )
-}
 results = {}
-for name, metric in metrics.items():
+for name, metric in METRICS.items():
     print(f"\nEvaluating {name} for Trainable Attention...")
     start_time = time.perf_counter()
     kwargs = {

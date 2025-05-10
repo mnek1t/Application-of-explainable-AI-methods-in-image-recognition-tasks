@@ -6,15 +6,16 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
 import json
+from utils.xai_constants import SPLIT_DATASET_PATH, TARGET_SIZE, CLASS_NAMES
+from utils.xai_methods import plot_training_history
+
 
 # locations of dataset folders
-splitted_dataset_path = "D:\\University\\Bachelor Thesis\\garbadge_dataset\\splitted_augmented_dataset"
-train_dataset_path = os.path.join(splitted_dataset_path, "train")
-test_dataset_path = os.path.join(splitted_dataset_path, "test")
-val_dataset_path = os.path.join(splitted_dataset_path, "val")
+train_dataset_path = os.path.join(SPLIT_DATASET_PATH, "train")
+test_dataset_path = os.path.join(SPLIT_DATASET_PATH, "test")
+val_dataset_path = os.path.join(SPLIT_DATASET_PATH, "val")
 
 base_model = InceptionV3(input_shape=(224, 224, 3), include_top=False, weights='imagenet')
-INCEPTION_V3_IMAGE_SIZE = (224, 224)
 
 # freeze the base model layers
 for layer in base_model.layers:
@@ -26,7 +27,7 @@ x = GlobalAveragePooling2D()(x)
 x = Dropout(0.5)(x)
 x = Dense(128, activation='relu')(x)
 x = Dropout(0.3)(x)
-predictions = Dense(6, activation='softmax')(x)  # 6 classes - as in the dataset
+predictions = Dense(len(CLASS_NAMES), activation='softmax')(x)  # 6 classes - as in the dataset
 
 model = Model(inputs=base_model.input, outputs=predictions)
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -34,13 +35,13 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 datagen = ImageDataGenerator(rescale=1./255)
 
 train_generator = datagen.flow_from_directory(
-    train_dataset_path, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical')
+    train_dataset_path, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical')
 
 val_generator = datagen.flow_from_directory(
-    val_dataset_path, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical')
+    val_dataset_path, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical')
 
 test_generator = datagen.flow_from_directory(
-    test_dataset_path, target_size=INCEPTION_V3_IMAGE_SIZE, batch_size=32, class_mode='categorical', shuffle=False)
+    test_dataset_path, target_size=TARGET_SIZE, batch_size=32, class_mode='categorical', shuffle=False)
 
 # set best model checpoints and early stopping to prevent overtraining
 checkpoint_path = "best_inception_model.keras"
@@ -72,20 +73,4 @@ trimmed_history = {key: value[:stopped_epoch] for key, value in history.history.
 with open("inception_history_trimmed.json", "w") as f:
     json.dump(trimmed_history, f)
 
-# plot model training analysis
-plt.figure(figsize=(14, 5))
-
-plt.subplot(1, 2, 1)
-plt.plot(trimmed_history['accuracy'], label='Train Accuracy')
-plt.plot(trimmed_history['val_accuracy'], label='Val Accuracy')
-plt.legend()
-plt.title("Accuracy")
-
-plt.subplot(1, 2, 2)
-plt.plot(trimmed_history['loss'], label='Train Loss')
-plt.plot(trimmed_history['val_loss'], label='Val Loss')
-plt.legend()
-plt.title("Loss")
-
-plt.tight_layout()
-plt.show()
+plot_training_history(trimmed_history)
