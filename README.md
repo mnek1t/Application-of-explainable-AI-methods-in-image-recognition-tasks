@@ -1,52 +1,64 @@
 # APPLICATION OF EXPLAINABLE AI METHODS IN AN IMAGE RECOGNITION TASK
-## This is a source code developed for the Bachelor Thesis practical part implementation.
 
-### Author:
-### Mykyta Medvediev, student of Riga Technical University
+## This is the source code developed for the Bachelor's Thesis practical part implementation.
 
-### Scientific advisor 
-### Dr.sc.ing., Dr.paed. professor Alla Anohina-Naumeca
+---
 
-# XAI methods implemented:
-SHAP<br/>
-LIME<br/>
-Permutation importance<br/>
-Grad-CAM<br/>
-Trainable attention<br/>
-LRP alpha-beta<br/>
-DeepLIFT<br/>
+### Author  
+**Mykyta Medvediev**, student of Riga Technical University
 
-### To run the code on your local machine please clone the repositrory:
-'''bash
+### Scientific Advisor  
+**Dr.sc.ing., Dr.paed., Professor Alla Anohina-Naumeca**
+
+---
+
+## XAI Methods Implemented
+
+- SHAP  
+- LIME  
+- Permutation Importance  
+- Grad-CAM  
+- Trainable Attention  
+- LRP (Alpha-Beta Variant)  
+- DeepLIFT  
+
+---
+
+## Getting Started
+
+### Clone the Repository
+
+```bash
 git clone https://github.com/mnek1t/Application-of-explainable-AI-methods-in-image-recognition-tasks
-'''
+cd Application-of-explainable-AI-methods-in-image-recognition-tasks
+```
 
 ### Install all required libraries
-'''bash
+```bash
 pip install tensorflow, keras, shap, lime, sklearn, quantus, matplotlib, cv2, numpy
-'''
+```
 
 ### For LRP alpha-beta
 Install Python 3.9 version
-'''bash
+```bash
 
-'''
+```
 Install innvestigate library 
-'''bash
+```bash
 pip install innvestigate
-'''
+```
 
 Create a virtual envirnoment to avoid version conflict:<br/>
 However be sure you installed Python version from https://www.python.org/downloads/release/python-390/
-'''bash
+```bash
 python3.9 -m venv xai_env
 source xai_env/bin/activate  # On Windows use: xai_env\Scripts\activate
-'''
+```
 
 Run the file
-'''bash
+```bash
 python lrp_implementation.py
-'''
+```
 
 Make sure you use correct paths locations for constants defined in utils folder
 
