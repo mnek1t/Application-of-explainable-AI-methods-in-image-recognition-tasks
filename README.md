@@ -40,9 +40,8 @@ pip install tensorflow, keras, shap, lime, sklearn, quantus, matplotlib, cv2, nu
 
 ### For LRP alpha-beta
 Install Python 3.9 version
-```bash
-
-```
+Download Python 3.9 from the official site:<br/>
+https://www.python.org/downloads/release/python-390/
 Install innvestigate library 
 ```bash
 pip install innvestigate
