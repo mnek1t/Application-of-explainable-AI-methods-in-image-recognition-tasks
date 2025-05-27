@@ -1,8 +1,8 @@
 # APPLICATION OF EXPLAINABLE AI METHODS IN AN IMAGE RECOGNITION TASK
 ## This is a source code developed for the Bachelor Thesis practical part implementation.
 
-## Author:
-Mykyta Medvediev, student of Riga Technical University
+### Author:
+### Mykyta Medvediev, student of Riga Technical University
 
 ### Scientific advisor 
 ### Dr.sc.ing., Dr.paed. professor Alla Anohina-Naumeca
