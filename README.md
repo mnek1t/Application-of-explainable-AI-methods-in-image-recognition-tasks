@@ -39,27 +39,26 @@ pip install tensorflow, keras, shap, lime, sklearn, quantus, matplotlib, cv2, nu
 ```
 
 ### For LRP alpha-beta
-Install Python 3.9 version
+**Install Python 3.9 version**
 Download Python 3.9 from the official site:<br/>
-https://www.python.org/downloads/release/python-390/
-Install innvestigate library 
+https://www.python.org/downloads/release/python-390/<br/>
+**Install innvestigate library**
 ```bash
 pip install innvestigate
 ```
 
-Create a virtual envirnoment to avoid version conflict:<br/>
-However be sure you installed Python version from https://www.python.org/downloads/release/python-390/
+**Create a virtual envirnoment to avoid version conflict:** <br/>
 ```bash
 python3.9 -m venv xai_env
 source xai_env/bin/activate  # On Windows use: xai_env\Scripts\activate
 ```
 
-Run the file
+**Run the file**
 ```bash
 python lrp_implementation.py
 ```
 
-Make sure you use correct paths locations for constants defined in utils folder
+**Make sure you use correct paths locations for constants defined in utils folder**
 
 ## Notes
 The model was trained using an augmented garbage image dataset of 4200 entries.<br/>
