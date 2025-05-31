@@ -1,2 +1,4 @@
 .env
 *.keras
+
+__pycache__/
