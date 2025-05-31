@@ -18,6 +18,7 @@ transform = A.Compose([
     A.ColorJitter(p=0.3),                               # 30% that color is changed
 ])
 
+# Copies images from source to destination if not already present
 def copy_files(image_file_names, class_input_path, class_output_path):
     for file_name in image_file_names:
         src_path = os.path.join(class_input_path, file_name)
@@ -31,7 +32,7 @@ def copy_files(image_file_names, class_input_path, class_output_path):
             continue
 
         cv2.imwrite(dst_path, img)
-
+# Applies augmentation to increase the number of images to the target amount
 def appy_augmentation(image_file_names, images_to_augment, class_input_path, class_output_path):
     augmented = 0
 
@@ -48,7 +49,7 @@ def appy_augmentation(image_file_names, images_to_augment, class_input_path, cla
             dst_path = os.path.join(class_output_path, save_file_name)
             cv2.imwrite(dst_path, cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR))
             augmented += 1
-
+# Process each class subfolder in the dataset
 for class_name in os.listdir(INPUT_DATASET_PATH):
     class_input_path = os.path.join(INPUT_DATASET_PATH, class_name)
     class_output_path = os.path.join(OUTPUT_DATASET_PATH, class_name)
